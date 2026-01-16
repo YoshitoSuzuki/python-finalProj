@@ -5,6 +5,7 @@ import random
 # DIGIT = 3
 RANGE = [0, 9]
 MAX_GUESS = 10
+SCREEN_WIDTH = 50
 
 LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
 
@@ -14,12 +15,22 @@ LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
 digit = 0
 
 while True:
+    print()
     digit = input("桁数を入力してください(1〜10): ")
-    if not digit.isdigit or not (1 <= int(digit) <= RANGE[1]-RANGE[0]+1):
-        print("Error")
+    try:
+        if digit.isdigit and 1 <= int(digit) <= RANGE[1]-RANGE[0]+1:
+            digit = int(digit)
+            break
+        else:
+            print("*" * SCREEN_WIDTH)
+            print("入力エラー: 入力は半角数字で1〜10の範囲で入力してください。")
+            print("*" * SCREEN_WIDTH)
+            continue
+    except:
+        print("*" * SCREEN_WIDTH)
+        print("入力エラー: 入力は半角数字で1〜10の範囲で入力してください。")
+        print("*" * SCREEN_WIDTH)
         continue
-    digit = int(digit)
-    break
 
 answer = [None] * digit
 for i in range(digit):
@@ -77,21 +88,28 @@ def showFrame ():
     for i in range(digit):
         print(" ",end=' ')
     print(f"\t\tHit\tBlow")
-    print("-" *50)
+    print("-" * SCREEN_WIDTH)
 
 def getPlayerInput():
     while True:
+        print()
         playerInput = input("enter the numbers: ")
 
         if not playerInput.isdigit:
-            print("Error")
+            printError()
             continue
             
         if len(playerInput) != digit:
-            print("Error")
+            printError()
             continue
 
         return [int(number) for number in playerInput]
+
+def printError ():
+    print("*" * SCREEN_WIDTH)
+    print("入力エラー: 正しい形式で入力してください。")
+    print("*" * SCREEN_WIDTH)
+
 
 
 def main():
@@ -106,6 +124,10 @@ def main():
     count = 0
 
     while True:
+        print()
+        print("=" * SCREEN_WIDTH)
+        print(f"桁数: {digit}")
+        print()
         print(f"{count+1}回目: ")
         rounds[count].InputAndCheck()
         
