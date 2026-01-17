@@ -66,11 +66,25 @@ def showFrame (digit):
 def getPlayerInput(digit):
     while True:
         print()
-        playerInput = input("enter the numbers: ")
-
         try:
+            playerInput = input("enter the numbers: ")
+
+            availableNumbers = []
+            for i in range(RANGE[0], RANGE[1]+1):
+                availableNumbers.append(i)
+            
+            isInclude = True
+
+            for i in range(len(playerInput)):
+                if not int(playerInput[i]) in availableNumbers:
+                    isInclude = False
+                    printCostomError(f"{RANGE[0]}から{RANGE[1]}までの数字のみ使用可能です。")
+            
+            if not isInclude:
+                continue
+
             if len(playerInput) != digit:
-                printError()
+                printCostomError(f"{digit}桁の数字を入力してください。")
                 continue
 
             playerInputList = []
@@ -92,26 +106,34 @@ def getPlayerInput(digit):
 def getYesNoInput(text, error):
     x = None
     while True:
-        x = input(f"{text}")
-        if x == 'y':
-            x = True
-            break
-        elif x == 'n':
-            x = False
-            break
-        else:
+        try:
+            x = input(f"{text}")
+            if x == 'y':
+                x = True
+                break
+            elif x == 'n':
+                x = False
+                break
+            else:
+                printError()
+                print(f"{error}")
+        except:
             printError()
-            print(f"{error}")
+            print()
+            print()
+            continue
     return x
 
 
 
 def printError ():
+    newLine(LINE)
     print("*" * SCREEN_WIDTH)
     print("入力エラー: 正しい形式で入力してください。")
     print("*" * SCREEN_WIDTH)
 
 def printCostomError(text):
+    newLine(LINE)
     print('*' * SCREEN_WIDTH)
     print(f"入力エラー: {text}")
     print('*' * SCREEN_WIDTH)
@@ -132,9 +154,6 @@ def hitAndBlow(digit, Result):
                 continue
             answer[i] = randNum
             break
-    print(answer)
-
-
 
     rounds = []
     for i in range(MAX_GUESS):
@@ -162,7 +181,6 @@ def hitAndBlow(digit, Result):
             Result["correct"] += 1
             break
 
-
         if count >= MAX_GUESS:
             print("Game Over")
             break
@@ -175,18 +193,24 @@ def record(Result):
     
     print()
     while True:
-        name = input("記録する名前を入力してください。: ")
-        if len(name) > NAME_LENGH:
-            print(f"名前の文字数は {NAME_LENGH} 文字までです。")
+        try:
+            name = input("記録する名前を入力してください。: ")
+            if len(name) > NAME_LENGH:
+                print(f"名前の文字数は {NAME_LENGH} 文字までです。")
+                print()
+                print("もう一度", end='')
+                continue
+            isOk = getYesNoInput(f"{name} でよろしいですか？ (y/n): ", '')
+            if isOk:
+                break
+            else:
+                print()
+                print("もう一度", end='')
+        except:
+            printError()
             print()
-            print("もう一度", end='')
+            print()
             continue
-        isOk = getYesNoInput(f"{name} でよろしいですか？ (y/n): ", '')
-        if isOk:
-            break
-        else:
-            print()
-            print("もう一度", end='')
 
     with open('HitAndBlow.csv', mode='a') as f:
         f.write(f"{dt_now.strftime('%Y年%m月%d日 %H:%M:%S')}, {name}, {Result["play"]}, {Result["correct"]}, {Result["guess"]}, {Result["average"]}\n")
@@ -199,7 +223,12 @@ def game():
 
     while True:
         print()
-        digit = input(f"桁数を入力してください(1〜{MAX_DIGIT}): ")
+        try:
+            digit = input(f"桁数を入力してください(1〜{MAX_DIGIT}): ")
+        except:
+            printError()
+            print()
+            continue
         try:
             if digit.isdigit() and 1 <= int(digit) <= MAX_DIGIT:
                 digit = int(digit)
@@ -214,7 +243,6 @@ def game():
             print(f"入力エラー: 入力は半角数字で1〜{MAX_DIGIT}の範囲で入力してください。")
             print("*" * SCREEN_WIDTH)
             continue
-
 
     ResultKeys = ["play", "correct", "guess", "average"]
     ResultValues = [0, 0, 0, 0]
@@ -251,29 +279,37 @@ def mainScreen():
 
 def showHistory():
     newLine(LINE)
-    print("日時", end='')
-    print(' ' * (DATA_LENGH[0]), end='')
-    print("名前", end='')
-    print(' ' * (DATA_LENGH[1]-4), end='')
-    print("プレイ回数", end='')
-    print(' ' * (DATA_LENGH[2]-10), end='')
-    print("当てた回数", end='')
-    print(' ' * (DATA_LENGH[3]-10), end='')
-    print("総予想回数", end='')
-    print(' ' * (DATA_LENGH[4]-10), end='')
-    print("平均予想回数", end='')
-    print()
-    print('-' * SCREEN_WIDTH)
-    with open('HitAndBlow.csv') as f:
-        reader = csv.reader(f)
-        for data in reader:
-            for i in range(len(data)):
-                print(f"{data[i]}", end='')
-                space = DATA_LENGH[i] - len(data[i])
-                print(' ' * space, end='')
+    while True:
+        print("日時", end='')
+        print(' ' * (DATA_LENGH[0]), end='')
+        print("名前", end='')
+        print(' ' * (DATA_LENGH[1]-4), end='')
+        print("プレイ回数", end='')
+        print(' ' * (DATA_LENGH[2]-10), end='')
+        print("当てた回数", end='')
+        print(' ' * (DATA_LENGH[3]-10), end='')
+        print("総予想回数", end='')
+        print(' ' * (DATA_LENGH[4]-10), end='')
+        print("平均予想回数", end='')
+        print()
+        print('-' * SCREEN_WIDTH)
+        with open('HitAndBlow.csv') as f:
+            reader = csv.reader(f)
+            for data in reader:
+                for i in range(len(data)):
+                    print(f"{data[i]}", end='')
+                    space = DATA_LENGH[i] - len(data[i])
+                    print(' ' * space, end='')
+                print()
+        print()
+        try:
+            input("Enterを押して戻る...")
+            break
+        except:
+            printError()
             print()
-    print()
-    input("Enterを押して戻る...")
+            print()
+            continue
 
 def settings():
     newLine(LINE)
@@ -308,12 +344,10 @@ def settings():
                 case 6:
                     setDefault()
                 case _:
-                    newLine(LINE)
                     printError()
                     continue
             newLine(LINE)
         except:
-            newLine(LINE)
             printError()
 
 def settingScreen(target, requirements):
@@ -343,10 +377,8 @@ def setting1():
                 MAX_DIGIT = RANGE[1] - RANGE[0] + 1
                 break
             else: 
-                newLine(LINE)
                 printCostomError(f"0 から {RANGE[1]-1} の数字を入力してください。")
         except:
-            newLine(LINE)
             printError()
 
 def setting2():
@@ -362,10 +394,8 @@ def setting2():
                 MAX_DIGIT = RANGE[1] - RANGE[0] + 1
                 break
             else: 
-                newLine(LINE)
                 printCostomError(f"{RANGE[0]+1} から 9 の数字を入力してください。")
         except:
-            newLine(LINE)
             printError()
 
 def setting3():
@@ -381,10 +411,8 @@ def setting3():
                 LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
                 break
             else:
-                newLine(LINE)
                 printCostomError("1以上の整数を入力してください。")
         except:
-            newLine(LINE)
             printError()
 
 def setting4():
@@ -398,13 +426,10 @@ def setting4():
                 NAME_LENGH = n
                 break
             elif n > 20:
-                newLine(LINE)
                 printCostomError("最大20文字までです。")
             else:
-                newLine(LINE)
                 printCostomError("1以上の整数を入力してください。")
         except:
-            newLine(LINE)
             printError()
 
 def setDefault():
@@ -418,12 +443,9 @@ def setDefault():
         MAX_DIGIT = RANGE[1] - RANGE[0] + 1
         LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
 
-
-        
-
 def main():
     try:
-        with open('HiaAndBlow.csv') as f:
+        with open('HitAndBlow.csv') as f:
             pass
     except:
         with open('HitAndBlow.csv', mode='w') as f:
@@ -431,8 +453,11 @@ def main():
     while True:
         mainScreen()
         print("Enterキーを押してください...")
-        # showHistory()
-        input()
+        try:
+            input()
+        except:
+            printError()
+            continue
         newLine(LINE)
 
         wantEnd = False
@@ -440,7 +465,11 @@ def main():
         while True:
             mainScreen()
             print("ゲームスタート: g, 戦歴を見る: h, 設定: s, ゲームを終了する: E")
-            mode = input()
+            try:
+                mode = input()
+            except:
+                printError()
+                continue
             if mode == 'g':
                 break
             elif mode == 'h':
@@ -453,7 +482,6 @@ def main():
                 wantEnd = True
                 break
             else:
-                newLine(LINE)
                 printError()
         
         if wantEnd:
@@ -464,17 +492,11 @@ def main():
 
         Result = game()
         print()
-        print(Result)
         isRecord = getYesNoInput("結果を記録しますか？ (y/n)", '')
         if isRecord:
             record(Result)
 
-
         newLine(LINE)
-
-
-
-
 
 
 main()
