@@ -1,10 +1,10 @@
 
-n = 10
 
-list = [0] * n
-
-for i in range(n):
-    list[i] = int(input())
+def printFunc(text):
+    print(f"{text}")
 
 
-print(list)
+
+n = 3
+
+printFunc(f"これは{n}です")
