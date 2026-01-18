@@ -1,14 +1,15 @@
 import math
 import random
+import time
 import datetime
 import csv
 
 # 定数定義
 RANGE = [0, 9]
 MAX_GUESS = 10
-SCREEN_WIDTH = 100
+SCREEN_WIDTH = 135
 LINE = 20
-DATA_LENGH = [23, 20, 13, 13, 13, 15]
+DATA_LENGH = [23, 20, 13, 13, 13, 15, 19, 19]
 NAME_LENGH = 20
 
 DEFAULT_SETTING = [0, 9, 10, 20]
@@ -31,14 +32,13 @@ class Trial:
         self.blow += blow
     
     def InputAndCheck (self, answer):
-        self.guessList = getPlayerInput(self.digit)
+        # self.guessList = getPlayerInput(self.digit)
         self.isInput = True
         for i in range(self.digit):
-            if self.guessList[i] in answer:
-                self.blow += 1
             if self.guessList[i] == answer[i]:
-                self.blow -= 1
                 self.hit += 1
+            elif self.guessList[i] in answer:
+                self.blow += 1
         self.isMatched = True if self.hit == self.digit else False
 
    
@@ -56,53 +56,14 @@ class Trial:
 
 
 def showFrame (digit):
-    newLine(LINE)
-    print(f"\t", end='')
+    print("桁数")
+    print(f" {digit}\t", end='')
     for i in range(digit):
         print(" ",end=' ')
     print(f"\t\tHit\tBlow")
     print("-" * SCREEN_WIDTH)
 
-def getPlayerInput(digit):
-    while True:
-        print()
-        try:
-            playerInput = input("enter the numbers: ")
-
-            availableNumbers = []
-            for i in range(RANGE[0], RANGE[1]+1):
-                availableNumbers.append(i)
-            
-            isInclude = True
-
-            for i in range(len(playerInput)):
-                if not int(playerInput[i]) in availableNumbers:
-                    isInclude = False
-                    printCostomError(f"{RANGE[0]}から{RANGE[1]}までの数字のみ使用可能です。")
-            
-            if not isInclude:
-                continue
-
-            if len(playerInput) != digit:
-                printCostomError(f"{digit}桁の数字を入力してください。")
-                continue
-
-            playerInputList = []
-            isExistSame = False
-            for number in playerInput:
-                if not int(number) in playerInputList:
-                    playerInputList.append(int(number))
-                else:
-                    print("同じ数字は2回以上使えません。もう一度入力してください。")
-                    isExistSame = True
-                    break
-            if not isExistSame:
-                return  playerInputList
-
-        except:
-            printError()
-            continue
-
+# y/n の入力をTrue/Falseに変換する関数
 def getYesNoInput(text, error):
     x = None
     while True:
@@ -119,33 +80,27 @@ def getYesNoInput(text, error):
                 print(f"{error}")
         except:
             printError()
-            print()
-            print()
+            newLine(2)
             continue
     return x
 
-
-
-def printError ():
-    newLine(LINE)
-    print("*" * SCREEN_WIDTH)
-    print("入力エラー: 正しい形式で入力してください。")
-    print("*" * SCREEN_WIDTH)
-
-def printCostomError(text):
+# エラー表示
+def printError(text = "正しい形式で入力してください。"):
     newLine(LINE)
     print('*' * SCREEN_WIDTH)
     print(f"入力エラー: {text}")
     print('*' * SCREEN_WIDTH)
 
+# 引数の分だけ改行する
 def newLine(n):
     for i in range(n):
         print()
 
-
-
+# ヒットアンドブローの処理
 def hitAndBlow(digit, Result):
+    clear = False
 
+    # 答えの数列を生成
     answer = [None] * digit
     for i in range(digit):
         while True:
@@ -155,6 +110,7 @@ def hitAndBlow(digit, Result):
             answer[i] = randNum
             break
 
+    # インスタンス作成
     rounds = []
     for i in range(MAX_GUESS):
         rounds.append(Trial(i, digit))
@@ -164,29 +120,84 @@ def hitAndBlow(digit, Result):
     newLine(LINE)
     while True:
         count += 1
-        print()
-        print("=" * SCREEN_WIDTH)
-        print(f"桁数: {digit}")
-        print()
-        print(f"{count}回目: ")
+
+        while True:
+
+            # Hit, Blow数を表示
+            if not count == 1:
+                print()
+                showFrame(digit)
+                for i in range(MAX_GUESS):
+                    rounds[i].show()
+
+            print()
+            try:
+                print()
+                print("=" * SCREEN_WIDTH)
+                print(f"{count}回目: ")
+
+                availableNumbers = []
+                for i in range(RANGE[0], RANGE[1]+1):
+                    availableNumbers.append(i)
+
+                print()
+                playerInput = input("enter the numbers: ")
+
+                isInclude = True
+
+                for i in range(len(playerInput)):
+                    if not int(playerInput[i]) in availableNumbers:
+                        isInclude = False
+                        break
+                    
+                if not isInclude:
+                    printError(f"{RANGE[0]}から{RANGE[1]}までの数字のみ使用可能です。")
+                    continue
+
+                if len(playerInput) != digit:
+                    printError(f"{digit}桁の数字を入力してください。")
+                    continue
+
+                playerInputList = []
+                isExistSame = False
+                for number in playerInput:
+                    if not int(number) in playerInputList:
+                        playerInputList.append(int(number))
+                    else:
+                        isExistSame = True
+                        break
+                if isExistSame:
+                    printError("同じ数字は2回以上使えません。もう一度入力してください。")
+                    continue
+                
+                break
+
+            except:
+                printError()
+                continue
+
+        rounds[count-1].guessList = playerInputList
+
         rounds[count-1].InputAndCheck(answer)
         
-        showFrame(digit)
-        for i in range(MAX_GUESS):
-            rounds[i].show()
-        print()
-
         if rounds[count-1].isMatched:
+            clear = True
+            print()
             print("matched!")
             Result["correct"] += 1
             break
 
         if count >= MAX_GUESS:
+            clear = False
+            print()
             print("Game Over")
             break
-    
-    return count
 
+        newLine(LINE)
+    
+    return count, clear
+
+# ゲーム結果をcsvに保存
 def record(Result):
     dt_now = datetime.datetime.now()
     name = None
@@ -208,12 +219,11 @@ def record(Result):
                 print("もう一度", end='')
         except:
             printError()
-            print()
-            print()
+            newLine(2)
             continue
 
     with open('HitAndBlow.csv', mode='a') as f:
-        f.write(f"{dt_now.strftime('%Y年%m月%d日 %H:%M:%S')}, {name}, {Result["play"]}, {Result["correct"]}, {Result["guess"]}, {Result["average"]}\n")
+        f.write(f"{dt_now.strftime('%Y年%m月%d日 %H:%M:%S')}, {name}, {Result["play"]}, {Result["correct"]}, {Result["guess"]}, {Result["average"]}, {Result["time"]}, {Result["averageTime"]}\n")
     
     print()
     print("結果を記録しました。")
@@ -221,38 +231,49 @@ def record(Result):
 
 def game():
 
+    newLine(LINE)
     while True:
-        print()
         try:
             digit = input(f"桁数を入力してください(1〜{MAX_DIGIT}): ")
+            if 1 <= int(digit) <= MAX_DIGIT:
+                digit = int(digit)
+                break
+            else:
+                printError(f"1〜{MAX_DIGIT}の範囲で入力してください。")
+                continue
         except:
             printError()
             print()
             continue
-        try:
-            if digit.isdigit() and 1 <= int(digit) <= MAX_DIGIT:
-                digit = int(digit)
-                break
-            else:
-                print("*" * SCREEN_WIDTH)
-                print(f"入力エラー: 入力は半角数字で1〜{MAX_DIGIT}の範囲で入力してください。")
-                print("*" * SCREEN_WIDTH)
-                continue
-        except:
-            print("*" * SCREEN_WIDTH)
-            print(f"入力エラー: 入力は半角数字で1〜{MAX_DIGIT}の範囲で入力してください。")
-            print("*" * SCREEN_WIDTH)
-            continue
 
-    ResultKeys = ["play", "correct", "guess", "average"]
-    ResultValues = [0, 0, 0, 0]
+    ResultKeys = ["play", "correct", "guess", "average", "time", "averageTime"]
+    ResultValues = [0, 0, '-', '-', '-', '-']
 
     Result = dict(zip(ResultKeys, ResultValues))
 
     while True:
+
+        print()
+
         Result["play"] += 1
-        Result["guess"] += hitAndBlow(digit, Result)
-        Result["average"] = Result["guess"] / Result["play"]
+
+        startTime = time.time()
+        guess, clear = hitAndBlow(digit, Result)
+        endTime = time.time()
+
+        if clear:
+            if Result["guess"] == '-':
+                Result["guess"] = 0
+            if Result["time"] == '-':
+                Result["time"] = 0
+            Result["guess"] += guess
+            playTime = int((endTime - startTime) * 10) / 10
+            Result["time"] += playTime
+            Result["average"] = int((Result["guess"] / Result["correct"]) * 10) / 10
+            Result["averageTime"] = int((Result["time"] / Result["correct"]) * 10) / 10
+            print(f"タイム: {playTime}")
+        else:
+            print()
 
         print()
         print("=" * SCREEN_WIDTH)
@@ -266,15 +287,13 @@ def game():
     return Result
 
 def mainScreen():
-    print()
-    print()
+    newLine(2)
     print("#" * SCREEN_WIDTH)
     side = (SCREEN_WIDTH - 12) / 2
     print(' ' * int(side), end='') 
     print("Hit And Blow")
     print("#" * SCREEN_WIDTH)
-    print()
-    print()
+    newLine(2)
     print('-' * SCREEN_WIDTH)
 
 def showHistory():
@@ -291,6 +310,10 @@ def showHistory():
         print("総予想回数", end='')
         print(' ' * (DATA_LENGH[4]-10), end='')
         print("平均予想回数", end='')
+        print(' ' * (DATA_LENGH[5]-12), end='')
+        print("合計クリアタイム", end='')
+        print(' ' * (DATA_LENGH[6]-16), end='')
+        print("平均タイム", end='')
         print()
         print('-' * SCREEN_WIDTH)
         with open('HitAndBlow.csv') as f:
@@ -307,10 +330,10 @@ def showHistory():
             break
         except:
             printError()
-            print()
-            print()
+            newLine(2)
             continue
 
+# 設定メニュー
 def settings():
     newLine(LINE)
 
@@ -318,8 +341,8 @@ def settings():
         print('=' * SCREEN_WIDTH)
         print()
         print("設定項目")
-        print(f"\t1: 数字の下限 (デフォルト: 0, 現在値: {RANGE[0]})")
-        print(f"\t2: 数字の上限 (デフォルト: 9, 現在値: {RANGE[1]})")
+        print(f"\t1: 数字の下限 (デフォルト: 0,  現在値: {RANGE[0]})")
+        print(f"\t2: 数字の上限 (デフォルト: 9,  現在値: {RANGE[1]})")
         print(f"\t3: 予想可能数 (デフォルト: 10, 現在値: {MAX_GUESS})")
         print(f"\t4: 名前文字数 (デフォルト: 20, 現在値: {NAME_LENGH})")
         print(f"\t5: 戻る")
@@ -350,20 +373,18 @@ def settings():
         except:
             printError()
 
+# 設定画面
 def settingScreen(target, requirements):
     print('=' * SCREEN_WIDTH)
-    print()
-    print()
-    print()
+    newLine(3)
     print(f"{target}")
     print()
     print(f"\t{requirements}")
-    print()
-    print()
-    print()
+    newLine(3)
     print('=' * SCREEN_WIDTH)
     print()
 
+# 設定画面1
 def setting1():
     global MAX_DIGIT
     newLine(LINE)
@@ -377,10 +398,11 @@ def setting1():
                 MAX_DIGIT = RANGE[1] - RANGE[0] + 1
                 break
             else: 
-                printCostomError(f"0 から {RANGE[1]-1} の数字を入力してください。")
+                printError(f"0 から {RANGE[1]-1} の数字を入力してください。")
         except:
             printError()
 
+# 設定画面2
 def setting2():
     global MAX_DIGIT
     newLine(LINE)
@@ -394,10 +416,11 @@ def setting2():
                 MAX_DIGIT = RANGE[1] - RANGE[0] + 1
                 break
             else: 
-                printCostomError(f"{RANGE[0]+1} から 9 の数字を入力してください。")
+                printError(f"{RANGE[0]+1} から 9 の数字を入力してください。")
         except:
             printError()
 
+# 設定画面3
 def setting3():
     global MAX_GUESS, LINE_DIGIT
     newLine(LINE)
@@ -411,10 +434,11 @@ def setting3():
                 LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
                 break
             else:
-                printCostomError("1以上の整数を入力してください。")
+                printError("1以上の整数を入力してください。")
         except:
             printError()
 
+# 設定画面4
 def setting4():
     global NAME_LENGH
     newLine(LINE)
@@ -426,12 +450,13 @@ def setting4():
                 NAME_LENGH = n
                 break
             elif n > 20:
-                printCostomError("最大20文字までです。")
+                printError("最大20文字までです。")
             else:
-                printCostomError("1以上の整数を入力してください。")
+                printError("1以上の整数を入力してください。")
         except:
             printError()
 
+# デフォルト
 def setDefault():
     isOk = getYesNoInput("全ての設定をリセットしますか？ (y/n)", '')
     if isOk:
@@ -443,6 +468,31 @@ def setDefault():
         MAX_DIGIT = RANGE[1] - RANGE[0] + 1
         LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
 
+# ルール表示
+def rule():
+    newLine(LINE)
+    while True:
+        print('*' * SCREEN_WIDTH)
+        print()
+        print("Hit and Blow")
+        print()
+        print(f"\tコンピュータが用意した数列をプレイヤーが推理していくゲーム")
+        print()
+        print(f"\t数字と場所が合っていたら、\tHit  +1")
+        print(f"\t数字のみが合っていたら、\tBlow +1")
+        print()
+        print('*' * SCREEN_WIDTH)
+        print()
+        print("Enterを押して戻る...")
+        try:
+            input()
+        except:
+            newLine(LINE)
+            printError()
+            continue
+        break
+
+# メイン関数
 def main():
     try:
         with open('HitAndBlow.csv') as f:
@@ -464,25 +514,29 @@ def main():
         
         while True:
             mainScreen()
-            print("ゲームスタート: g, 戦歴を見る: h, 設定: s, ゲームを終了する: E")
+            print("ゲームスタート: g, 戦歴を見る: h, 設定: s, ゲームルールを確認: r, ゲームを終了する: E")
             try:
                 mode = input()
             except:
                 printError()
                 continue
-            if mode == 'g':
-                break
-            elif mode == 'h':
-                showHistory()
-                newLine(LINE)
-            elif mode == 's':
-                settings()
-                newLine(LINE)
-            elif mode == 'E':
-                wantEnd = True
-                break
-            else:
-                printError()
+            match mode:
+                case 'g':
+                    break
+                case 'h':
+                    showHistory()
+                    newLine(LINE)
+                case 's':
+                    settings()
+                    newLine(LINE)
+                case 'r':
+                    rule()
+                    newLine(LINE)
+                case 'E':
+                    wantEnd = True
+                    break
+                case _:
+                    printError()
         
         if wantEnd:
             newLine(LINE)
@@ -497,6 +551,7 @@ def main():
             record(Result)
 
         newLine(LINE)
+
 
 
 main()
