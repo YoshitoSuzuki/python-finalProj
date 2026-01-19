@@ -1,3 +1,4 @@
+# 必要ライブラリのインポート
 import math
 import random
 import time
@@ -5,19 +6,23 @@ import datetime
 import csv
 
 # 定数定義
-RANGE = [0, 9]
-MAX_GUESS = 10
+
+DEFAULT_SETTING = [0, 9, 10, 20]
+
+RANGE = [DEFAULT_SETTING[0], DEFAULT_SETTING[1]]
+MAX_GUESS = DEFAULT_SETTING[2]
 SCREEN_WIDTH = 135
 LINE = 20
 DATA_LENGH = [23, 20, 13, 13, 13, 15, 19, 19]
-NAME_LENGH = 20
-
-DEFAULT_SETTING = [0, 9, 10, 20]
+NAME_LENGH = DEFAULT_SETTING[3]
 
 MAX_DIGIT = RANGE[1] - RANGE[0] + 1
 LINE_DIGIT = math.ceil(math.log10(MAX_GUESS+1))
 
+# 各予想のデータを管理するクラス
 class Trial:
+
+    # 初期化
     def __init__(self, n, digit):
         self.line = n+1
         self.hit = 0
@@ -26,13 +31,9 @@ class Trial:
         self.isInput = False
         self.isMatched = False
         self.guessList = [0] * digit
-
-    def addHitAndBlow (self, hit, blow):
-        self.hit += hit
-        self.blow += blow
     
+    # Hit, Blowの数を計算する
     def InputAndCheck (self, answer):
-        # self.guessList = getPlayerInput(self.digit)
         self.isInput = True
         for i in range(self.digit):
             if self.guessList[i] == answer[i]:
@@ -41,7 +42,7 @@ class Trial:
                 self.blow += 1
         self.isMatched = True if self.hit == self.digit else False
 
-   
+    # 結果を表示する
     def show (self):
         if self.isInput:
             spaceN = math.ceil(math.log10(self.line+1))
@@ -53,16 +54,6 @@ class Trial:
                 print(self.guessList[i], end=' ')
             print(f"\t\t {self.hit}\t {self.blow}")
     
-
-
-def showFrame (digit):
-    print("桁数")
-    print(f" {digit}\t", end='')
-    for i in range(digit):
-        print(" ",end=' ')
-    print(f"\t\tHit\tBlow")
-    print("-" * SCREEN_WIDTH)
-
 # y/n の入力をTrue/Falseに変換する関数
 def getYesNoInput(text, error):
     x = None
@@ -80,7 +71,7 @@ def getYesNoInput(text, error):
                 print(f"{error}")
         except:
             printError()
-            newLine(2)
+            print()
             continue
     return x
 
@@ -126,7 +117,14 @@ def hitAndBlow(digit, Result):
             # Hit, Blow数を表示
             if not count == 1:
                 print()
-                showFrame(digit)
+
+                print("桁数")
+                print(f" {digit}\t", end='')
+                for i in range(digit):
+                    print(" ",end=' ')
+                print(f"\t\tHit\tBlow")
+                print("-" * SCREEN_WIDTH)
+
                 for i in range(MAX_GUESS):
                     rounds[i].show()
 
@@ -136,6 +134,7 @@ def hitAndBlow(digit, Result):
                 print("=" * SCREEN_WIDTH)
                 print(f"{count}回目: ")
 
+                # 使用可能な数字のリストを作成する
                 availableNumbers = []
                 for i in range(RANGE[0], RANGE[1]+1):
                     availableNumbers.append(i)
@@ -143,8 +142,11 @@ def hitAndBlow(digit, Result):
                 print()
                 playerInput = input("enter the numbers: ")
 
+
+                # 入力が適切か判断する
                 isInclude = True
 
+                # 範囲内の数字を使っているか
                 for i in range(len(playerInput)):
                     if not int(playerInput[i]) in availableNumbers:
                         isInclude = False
@@ -154,11 +156,14 @@ def hitAndBlow(digit, Result):
                     printError(f"{RANGE[0]}から{RANGE[1]}までの数字のみ使用可能です。")
                     continue
 
+                # 桁数が合っているか
                 if len(playerInput) != digit:
                     printError(f"{digit}桁の数字を入力してください。")
                     continue
 
                 playerInputList = []
+
+                # 同じ数字が使われていないか
                 isExistSame = False
                 for number in playerInput:
                     if not int(number) in playerInputList:
@@ -178,8 +183,10 @@ def hitAndBlow(digit, Result):
 
         rounds[count-1].guessList = playerInputList
 
+        # Hit, Blow数を計算
         rounds[count-1].InputAndCheck(answer)
         
+        # 正解か判定
         if rounds[count-1].isMatched:
             clear = True
             print()
@@ -187,6 +194,7 @@ def hitAndBlow(digit, Result):
             Result["correct"] += 1
             break
 
+        # 予想回数制限がオーバーした場合ゲームオーバー
         if count >= MAX_GUESS:
             clear = False
             print()
@@ -203,6 +211,8 @@ def record(Result):
     name = None
     
     print()
+
+    # 記録する名前を取得
     while True:
         try:
             name = input("記録する名前を入力してください。: ")
@@ -222,16 +232,27 @@ def record(Result):
             newLine(2)
             continue
 
+    # CSV形式で保存
     with open('HitAndBlow.csv', mode='a') as f:
         f.write(f"{dt_now.strftime('%Y年%m月%d日 %H:%M:%S')}, {name}, {Result["play"]}, {Result["correct"]}, {Result["guess"]}, {Result["average"]}, {Result["time"]}, {Result["averageTime"]}\n")
     
     print()
     print("結果を記録しました。")
+    while True:
+        print()
+        try:
+            input("Enterを押してメインメニューに戻る...")
+            break
+        except:
+            printError()
 
 
+# 各ゲームの処理
 def game():
 
     newLine(LINE)
+
+    # 桁数の決定
     while True:
         try:
             digit = input(f"桁数を入力してください(1〜{MAX_DIGIT}): ")
@@ -246,6 +267,7 @@ def game():
             print()
             continue
 
+    # 結果を入れる辞書を作成
     ResultKeys = ["play", "correct", "guess", "average", "time", "averageTime"]
     ResultValues = [0, 0, '-', '-', '-', '-']
 
@@ -261,6 +283,7 @@ def game():
         guess, clear = hitAndBlow(digit, Result)
         endTime = time.time()
 
+        # 結果の代入
         if clear:
             if Result["guess"] == '-':
                 Result["guess"] = 0
@@ -286,6 +309,7 @@ def game():
     
     return Result
 
+# タイトルを表示する
 def mainScreen():
     newLine(2)
     print("#" * SCREEN_WIDTH)
@@ -296,6 +320,7 @@ def mainScreen():
     newLine(2)
     print('-' * SCREEN_WIDTH)
 
+# CSVファイルに保存された履歴を表示する
 def showHistory():
     newLine(LINE)
     while True:
@@ -373,7 +398,7 @@ def settings():
         except:
             printError()
 
-# 設定画面
+# 設定画面テンプレート
 def settingScreen(target, requirements):
     print('=' * SCREEN_WIDTH)
     newLine(3)
@@ -456,9 +481,11 @@ def setting4():
         except:
             printError()
 
-# デフォルト
+# デフォルト設定
 def setDefault():
     isOk = getYesNoInput("全ての設定をリセットしますか？ (y/n)", '')
+
+    # デフォルト値を変数に代入
     if isOk:
         global MAX_GUESS, NAME_LENGH, MAX_DIGIT, LINE_DIGIT
         RANGE[0] = DEFAULT_SETTING[0]
@@ -494,12 +521,17 @@ def rule():
 
 # メイン関数
 def main():
+    newLine(LINE)
+
+    # "HitAndBlow.csv"が存在しないとき作成
     try:
         with open('HitAndBlow.csv') as f:
             pass
     except:
         with open('HitAndBlow.csv', mode='w') as f:
             pass
+
+    isFirst = True
     while True:
         mainScreen()
         print("Enterキーを押してください...")
@@ -508,6 +540,18 @@ def main():
         except:
             printError()
             continue
+
+        # 初めての時、ルールを表示するか質問する
+        if isFirst:
+            isFirst = False
+            newLine(LINE)
+            mainScreen()
+            print()
+            wantCheckRule = getYesNoInput('ルールを確認しますか？(y/n): ', '')
+
+            if wantCheckRule:
+                rule()
+
         newLine(LINE)
 
         wantEnd = False
@@ -520,6 +564,8 @@ def main():
             except:
                 printError()
                 continue
+
+            # メインメニューから書く画面に移動する
             match mode:
                 case 'g':
                     break
@@ -544,8 +590,12 @@ def main():
             print("おしまい")
             break
 
+        # ゲーム実行と結果を取得
         Result = game()
+
         print()
+
+        # 結果の記録
         isRecord = getYesNoInput("結果を記録しますか？ (y/n)", '')
         if isRecord:
             record(Result)
