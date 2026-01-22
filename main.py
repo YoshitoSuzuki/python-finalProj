@@ -31,6 +31,7 @@ class Trial:
         self.isInput = False
         self.isMatched = False
         self.guessList = [0] * digit
+        self.player = 0
     
     # Hit, Blowの数を計算する
     def InputAndCheck (self, answer):
@@ -88,7 +89,7 @@ def newLine(n):
         print()
 
 # ヒットアンドブローの処理
-def hitAndBlow(digit, Result):
+def hitAndBlow(digit, Result, playerN):
     clear = False
 
     # 答えの数列を生成
@@ -120,6 +121,10 @@ def hitAndBlow(digit, Result):
 
                 print("桁数")
                 print(f" {digit}\t", end='')
+
+                if playerN == 2:
+                    print(f"Player\t", end='')
+
                 for i in range(digit):
                     print(" ",end=' ')
                 print(f"\t\tHit\tBlow")
@@ -132,7 +137,12 @@ def hitAndBlow(digit, Result):
             try:
                 print()
                 print("=" * SCREEN_WIDTH)
-                print(f"{count}回目: ")
+                print(f"{count}回目: ", end='')
+
+                if playerN == 2:
+                    print(f"Player{int((count-1) % 2) + 1}")
+                else:
+                    print()
 
                 # 使用可能な数字のリストを作成する
                 availableNumbers = []
@@ -191,6 +201,9 @@ def hitAndBlow(digit, Result):
             clear = True
             print()
             print("matched!")
+            
+            if playerN == 2:
+                print(f"Winner: Player{(count-1) % 2 + 1}")
             Result["correct"] += 1
             break
 
@@ -206,7 +219,7 @@ def hitAndBlow(digit, Result):
     return count, clear
 
 # ゲーム結果をcsvに保存
-def record(Result):
+def record(Result, battleMode):
     dt_now = datetime.datetime.now()
     name = None
     
@@ -215,7 +228,10 @@ def record(Result):
     # 記録する名前を取得
     while True:
         try:
-            name = input("記録する名前を入力してください。: ")
+            if battleMode:
+                name = input("記録するグループ名を入力してください。: ")
+            else:
+                name = input("記録する名前を入力してください。: ")
             if len(name) > NAME_LENGH:
                 print(f"名前の文字数は {NAME_LENGH} 文字までです。")
                 print()
@@ -248,7 +264,12 @@ def record(Result):
 
 
 # 各ゲームの処理
-def game():
+def game(battleMode):
+
+    # 対戦モードの時、プレイヤー人数を2人にする
+    playerN = 1
+    if battleMode:
+        playerN = 2
 
     newLine(LINE)
 
@@ -280,7 +301,7 @@ def game():
         Result["play"] += 1
 
         startTime = time.time()
-        guess, clear = hitAndBlow(digit, Result)
+        guess, clear = hitAndBlow(digit, Result, playerN)
         endTime = time.time()
 
         # 結果の代入
@@ -591,14 +612,16 @@ def main():
             break
 
         # ゲーム実行と結果を取得
-        Result = game()
+        newLine(LINE)
+        battleMode = getYesNoInput(f"対戦しますか？ (y/n): ", '')
+        Result = game(battleMode)
 
         print()
 
         # 結果の記録
-        isRecord = getYesNoInput("結果を記録しますか？ (y/n)", '')
+        isRecord = getYesNoInput("結果を記録しますか？ (y/n): ", '')
         if isRecord:
-            record(Result)
+            record(Result, battleMode)
 
         newLine(LINE)
 
