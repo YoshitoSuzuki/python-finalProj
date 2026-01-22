@@ -31,7 +31,6 @@ class Trial:
         self.isInput = False
         self.isMatched = False
         self.guessList = [0] * digit
-        self.player = 0
     
     # Hit, Blowの数を計算する
     def InputAndCheck (self, answer):
