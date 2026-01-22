@@ -31,6 +31,7 @@ class Trial:
         self.isInput = False
         self.isMatched = False
         self.guessList = [0] * digit
+        self.player = 0
     
     # Hit, Blowの数を計算する
     def InputAndCheck (self, answer):
@@ -43,13 +44,17 @@ class Trial:
         self.isMatched = True if self.hit == self.digit else False
 
     # 結果を表示する
-    def show (self):
+    def show (self, playerN):
         if self.isInput:
             spaceN = math.ceil(math.log10(self.line+1))
             for i in range(LINE_DIGIT - spaceN):
                 print(" ", end='')
             print(f"{self.line}", end='')
             print(f"\t", end='')
+
+            if playerN == 2:
+                print(f"{self.player}\t", end='')
+
             for i in range(self.digit):
                 print(self.guessList[i], end=' ')
             print(f"\t\t {self.hit}\t {self.blow}")
@@ -114,6 +119,10 @@ def hitAndBlow(digit, Result, playerN):
 
         while True:
 
+            # 現在の手番プレイヤーを代入
+            if playerN == 2:
+                rounds[count-1].player = (count-1) % 2 + 1
+
             # Hit, Blow数を表示
             if not count == 1:
                 print()
@@ -130,7 +139,7 @@ def hitAndBlow(digit, Result, playerN):
                 print("-" * SCREEN_WIDTH)
 
                 for i in range(MAX_GUESS):
-                    rounds[i].show()
+                    rounds[i].show(playerN)
 
             print()
             try:
@@ -139,7 +148,7 @@ def hitAndBlow(digit, Result, playerN):
                 print(f"{count}回目: ", end='')
 
                 if playerN == 2:
-                    print(f"Player{int((count-1) % 2) + 1}")
+                    print(f"Player{rounds[count-1].player}")
                 else:
                     print()
 
@@ -202,7 +211,7 @@ def hitAndBlow(digit, Result, playerN):
             print("matched!")
             
             if playerN == 2:
-                print(f"Winner: Player{(count-1) % 2 + 1}")
+                print(f"Winner: Player{rounds[count-1].player}")
             Result["correct"] += 1
             break
 
